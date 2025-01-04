@@ -316,6 +316,22 @@ clean_disease_info = clean_disease_correct_row_names2[-1, ]
 # Check for missing values
 sum(is.na(clean_disease_info)) 
 
+#Check for duplicate entries
+num_duplicates_diseaseinfo <- sum(duplicated(clean_disease_info))
+print(paste("Number of duplicate rows:", num_duplicates_diseaseinfo))
+
+# View the duplicate rows themselves
+duplicate_rows <- clean_disease_info[duplicated(clean_disease_info), ]
+View(duplicate_rows)
+
+# Remove duplicate entries 
+clean_disease_info <- clean_disease_info %>%
+  distinct()
+
+# Check for missing values
+missingvals_diseaseinfo <- sum(is.na(clean_disease_info))
+print(paste("Number of missing values:", missingvals_diseaseinfo))
+
 #View cleaned file
 View(clean_disease_info)
 
@@ -403,7 +419,6 @@ colnames(clean_PD_correct_row_names) = clean_PD_correct_row_names[1, ]
 clean_parameter_description = clean_PD_correct_row_names[-1, ]            
 
 # When we viewed the dataset, there were empty cells in the description column
-
 # Replace missing values with NA
 
 # Sets NA values to empty cells 
@@ -419,11 +434,20 @@ filtered_data <- pd[grepl("^[0-9]+", pd[[1]]), ]
 # Combine the header with the filtered data
 clean_parameter_description <- rbind(pd[1, ], filtered_data)
 
-#View cleaned data 
-View(clean_parameter_description)
+#Check for duplicate entries
+num_duplicates_parades <- sum(duplicated(clean_parameter_description))
+print(paste("Number of duplicate rows:", num_duplicates_parades))
+
+# Remove duplicate entries 
+clean_parameter_description <- clean_parameter_description %>%
+  distinct()
 
 # Check for missing values
-sum(is.na(clean_parameter_description)) 
+missingvals_parades <- sum(is.na(clean_parameter_description))
+print(paste("Number of missing values:", missingvals_parades))
+
+#View cleaned data 
+View(clean_parameter_description)
 
 # Save the output file 
 write.csv(clean_parameter_description, "~/Desktop/DCDM_GRP7/outputs/IMPC_parameter_description_clean.csv", row.names = FALSE)
@@ -513,7 +537,20 @@ View(clean_Pro)
 clean_Pro[clean_Pro == ' '] <- NA
 clean_Pro[is.na(clean_Pro)] <- "NA"
 
-sum(is.na(clean_Pro)) #check for missing values
+# Check for missing values 
+sum(is.na(clean_Pro)) 
+
+#Check for duplicate entries
+num_duplicates_procedure <- sum(duplicated(clean_Pro))
+print(paste("Number of duplicate rows:", num_duplicates_procedure))
+
+# Remove duplicate entries 
+clean_procedure <- clean_Pro %>%
+  distinct()
+
+# Check for missing values
+missingvals_procedure <- sum(is.na(clean_procedure))
+print(paste("Number of missing values:", missingvals_procedure))
 
 #View cleaned data
 View(clean_Pro)
