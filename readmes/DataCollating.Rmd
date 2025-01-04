@@ -1,0 +1,86 @@
+---
+title: "Data Collating"
+output: html_document
+date: "2025-01-04"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Step 1: Data Collation 
+
+## Import and normalise the SOP file
+## The original files were exported from the HPC into R for data cleaning.
+```{r}
+#Install and load the tidyverse package. The tidyverse package contains several packages within it including dplyr, tidyr, purr, readr for example.
+install.packages("tidyverse")
+library(tidyverse)
+
+#Define the correct column order from the IMPC_SOP.csv file
+sop_file <- "~/Desktop/DCDM_Group7/originals/IMPC_SOP.csv" #path to IMPC_SOP
+sop_data <- read.csv(sop_file, header = TRUE) 
+
+# Extract and clean the correct column names in the SOP file (standardised to lowercase)
+correct_fields <- tolower(trimws(sop_data[[1]]))  # Lowercase and remove extra spaces
+
+# Set the path to the folder containing all approximately 142k files
+data_path <- "~/Desktop/DCDM_Group7/originals/7/"
+
+# List all files in the folder
+file_list <- list.files(path = data_path, pattern = "\\.csv$", full.names = TRUE)
+
+# Created an empty list to store data
+combined_data <- list()
+```
+
+## Create a loop to process each file in the 142k CSV files
+
+```{r}
+library(dplyr)
+
+total_missing_fields <- 0
+
+for (file in file_list) {
+  # Read the file
+  data <- read.csv(file, header = FALSE, col.names = c("field", "value"))
+  
+  # Clean up the field names: lowercase and remove spaces
+  data$field <- tolower(trimws(data$field))
+  
+  # Transpose the 'value' column so that fields become column names
+  reshaped_data <- t(data$value) %>%
+    as.data.frame() %>%
+    setNames(data$field)
+  
+  # Quality check to see missing columns with NA
+  missing_fields <- setdiff(correct_fields, names(reshaped_data))  #We found no missing fields, so NAs were added
+  
+  # Add the count of missing fields to the total
+  total_missing_fields <- total_missing_fields + length(missing_fields)
+  
+  # Reorder columns to match the correct field order as specified in the SOP 
+  final_data <- reshaped_data %>%
+    select(all_of(correct_fields))
+  
+  # Add to the list
+  combined_data[[length(combined_data) + 1]] <- final_data
+}
+
+# Confirm total missing fields. 
+cat("Total number of missing fields:", total_missing_fields, "\n")
+# The output is 0, so no NAs were added
+
+```
+
+
+###Combine all data frames into one - COLLATION
+```{r}
+# Combine individual CSV files into one dataframe
+final_combined_data <- bind_rows(combined_data)
+
+# Write the combined data to a single CSV file
+write.csv(final_combined_data, "~/Desktop/DCDM_Group7/outputs/final_combined_output.csv", row.names = FALSE)
+#The output is not clean, but it is in the correct column order as the SOP file
+```
+
