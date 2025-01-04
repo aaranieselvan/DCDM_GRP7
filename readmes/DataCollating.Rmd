@@ -18,14 +18,14 @@ install.packages("tidyverse")
 library(tidyverse)
 
 #Define the correct column order from the IMPC_SOP.csv file
-sop_file <- "~/Desktop/DCDM_Group7/originals/IMPC_SOP.csv" #path to IMPC_SOP
+sop_file <- "~/Desktop/DCDM_GRP7/originals/IMPC_SOP.csv" #path to IMPC_SOP
 sop_data <- read.csv(sop_file, header = TRUE) 
 
 # Extract and clean the correct column names in the SOP file (standardised to lowercase)
 correct_fields <- tolower(trimws(sop_data[[1]]))  # Lowercase and remove extra spaces
 
 # Set the path to the folder containing all approximately 142k files
-data_path <- "~/Desktop/DCDM_Group7/originals/7/"
+data_path <- "~/Desktop/DCDM_GRP7/originals/7/"
 
 # List all files in the folder
 file_list <- list.files(path = data_path, pattern = "\\.csv$", full.names = TRUE)
@@ -80,7 +80,7 @@ cat("Total number of missing fields:", total_missing_fields, "\n")
 final_combined_data <- bind_rows(combined_data)
 
 # Write the combined data to a single CSV file
-write.csv(final_combined_data, "~/Desktop/DCDM_Group7/outputs/final_combined_output.csv", row.names = FALSE)
+write.csv(final_combined_data, "~/Desktop/DCDM_GRP7/outputs/final_combined_output.csv", row.names = FALSE)
 #The output is not clean, but it is in the correct column order as the SOP file
 ```
 
