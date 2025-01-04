@@ -293,20 +293,15 @@ clean_disease <- t(sapply(lines, process_line))
 
 # Convert the result to a data frame
 clean_disease <- as.data.frame(clean_disease)
-
-# View the processed data
-View(clean_disease)
 ```
 
 ## Convert to tibble for easy visualisation
 
 ```{r}
 clean_disease_correct_row_names = as_tibble(clean_disease, rownames = "disease_id")
-View(clean_disease_correct_row_names)
 
 #remove first column
 clean_disease_correct_row_names2 = clean_disease_correct_row_names[, -1]
-View(clean_disease_correct_row_names2)
 ```
 
 ## Rename the header with the correct column ids
@@ -318,11 +313,11 @@ colnames(clean_disease_correct_row_names2) = clean_disease[1, ]
 # Remove the first row which is now the header
 clean_disease_info = clean_disease_correct_row_names2[-1, ]  
 
-# View the updated dataframe
-View(clean_disease_info)
-
 # Check for missing values
 sum(is.na(clean_disease_info)) 
+
+#View cleaned file
+View(clean_disease_info)
 
 # Save the output as a CSV file 
 write.csv(clean_disease_info, "~/Desktop/DCDM_GRP7/outputs/Disease_information_clean.csv", row.names = FALSE)
@@ -387,20 +382,15 @@ clean_PD <- t(sapply(lines2, process_line2))
 
 # Convert the result to a data frame
 clean_PD <- as.data.frame(clean_PD)
-
-# View the processed data
-View(clean_PD)
 ```
 
 ## Convert to tibble for easy visualisation
 
 ```{r}
 clean_PD_correct_row_names = as_tibble(clean_PD, rownames = "impcParameterOrigId")
-View(clean_PD_correct_row_names)
 
 # Remove first column
 clean_PD_correct_row_names = clean_PD_correct_row_names[, -1]
-View(clean_PD_correct_row_names)
 ```
 
 ## Rename the header with the correct column ids
@@ -412,8 +402,6 @@ colnames(clean_PD_correct_row_names) = clean_PD_correct_row_names[1, ]
 # Remove the first row which is now the header
 clean_parameter_description = clean_PD_correct_row_names[-1, ]            
 
-# View the updated dataframe
-View(clean_parameter_description)
 # When we viewed the dataset, there were empty cells in the description column
 
 # Replace missing values with NA
@@ -424,7 +412,14 @@ clean_parameter_description[clean_parameter_description == " " ] <- NA
 # Sets NA values into a string
 clean_parameter_description[is.na(clean_parameter_description)] <- "NA" 
 
-# Check if it worked 
+#Remove rows with inconsistent data
+pd <- clean_parameter_description
+filtered_data <- pd[grepl("^[0-9]+", pd[[1]]), ]
+
+# Combine the header with the filtered data
+clean_parameter_description <- rbind(pd[1, ], filtered_data)
+
+#View cleaned data 
 View(clean_parameter_description)
 
 # Check for missing values
@@ -489,9 +484,6 @@ clean_Pro <- t(sapply(lines3, process_line3))
 
 # Convert the result to a data frame
 clean_Pro <- as.data.frame(clean_Pro)
-
-# View the processed data
-View(clean_Pro)
 ```
 
 ## Convert to tibble for easy visualisation
@@ -499,11 +491,9 @@ View(clean_Pro)
 ```{r}
 # Changes rowname to correct first column name
 clean_Pro_correct_row_names = as_tibble(clean_Pro, rownames = "name") 
-View(clean_Pro_correct_row_names)
 
 # Remove the first column
 clean_Pro_correct_row_names = clean_Pro_correct_row_names[, -1]
-View(clean_Pro_correct_row_names)
 ```
 
 ## Rename the header with the correct column ids
@@ -523,10 +513,10 @@ View(clean_Pro)
 clean_Pro[clean_Pro == ' '] <- NA
 clean_Pro[is.na(clean_Pro)] <- "NA"
 
-# View the updated column
-View(clean_Pro)
 sum(is.na(clean_Pro)) #check for missing values
 
+#View cleaned data
+View(clean_Pro)
 # Save the output file 
 write.csv(clean_Pro, "~/Desktop/DCDM_GRP7/outputs/IMPC_procedure_clean.csv", row.names = FALSE)
 ```
