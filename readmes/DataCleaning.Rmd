@@ -1,0 +1,532 @@
+---
+title: "data_cleaning"
+output: html_document
+date: "2025-01-04"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Step 2: Data Cleaning 
+
+# 2A: Cleaning the Mouse Files 
+## Validation 
+Here, we ensured each element in the columns matched the description outlined in the SOP file. 
+
+### Validate string length ( 15 characters) in analysis id
+
+```{r}
+# Create a loop
+validate_analysis_id <- function (x, dataType, min_val, max_val) { # Validate length of elements in the vector 'x'
+  if (tolower(dataType) == "string") { # Check if the `dataType` (converted to lowercase) is a string
+    invalid_analysis_id <- which(sapply(x, nchar) < min_val | sapply (x, nchar) > max_val) # If the string length is less than the minimum value, or more than the maximum value, the result was stored in invalid_analysis_id
+    return(invalid_analysis_id) # Returns the invalid elements
+  } 
+}
+  
+# Apply the function to analysis_id 
+invalid_analysis_id <- validate_analysis_id(final_combined_data$analysis_id, "string", 15, 15) # In the final combined data, looking at the analysis_id column, make sure the elements have a string length with a minimum and maximum value of 15 
+
+# Print results, if there are any invalid elements
+print(invalid_analysis_id)
+
+# The returned results show 0 invalid analysis ids. This means that all strings are valid, and have the lengths defined in the SOP file 
+```
+
+### Validate string length for gene accession id
+
+```{r}
+# Create a loop
+validate_gene_accession_id <- function (x, dataType, min_val, max_val) { # Validate length of elements in the vector 'x'
+  if (tolower(dataType) == "string") { # Check if the `dataType` (converted to lowercase) is a string
+    invalid_gene_accession_id <- which(sapply(x, nchar) < min_val | sapply (x, nchar) > max_val)  # If the string length is less than the minimum value, or more than the maximum value, the result was stored in invalid_gene_accession_id
+    return(invalid_gene_accession_id) # Returns the invalid elements
+  } 
+}
+  
+# Apply the function to gene_accession_id
+invalid_gene_accession_id <- validate_gene_accession_id(final_combined_data$gene_accession_id, "string", 9, 11) # In the final combined data, looking at the gene_accession_id column, make sure the elements have a string length with a minimum value of 9, and maximum value of 11
+
+# Print results 
+print(invalid_gene_accession_id)
+
+# The returned results show 0 invalid gene accession ids. This means that all strings are valid, and have the lengths defined in the SOP file
+
+```
+
+### Validate string length for gene_symbol
+
+```{r}
+# Create a loop
+validate_gene_symbol <- function (x, dataType, min_val, max_val) {  # Validate length of elements in the vector 'x'
+  if (tolower(dataType) == "string") { # Check if the `dataType` (converted to lowercase) is a string
+    invalid_gene_symbol <- which(sapply(x, nchar) < min_val | sapply (x, nchar) > max_val)  # If the string length is less than the minimum value, or more than the maximum value, the result was stored in invalid_gene_symbol
+    return(invalid_gene_symbol) # Returns the invalid elements
+  } 
+}
+  
+# Apply the function to gene_symbol 
+invalid_gene_symbol <- validate_gene_symbol(final_combined_data$gene_symbol, "string", 1, 13) # In the final combined data, looking at the gene_symbol column, make sure the elements have a string length with a minimum value of 1, and maximum value of 13
+
+#Print results 
+print(invalid_gene_symbol)
+
+# The returned results show 0 invalid gene_symbols. This means that all strings are valid, and have the lengths defined in the SOP file
+
+# The elements in the gene_symbol column have inconsistent case (some are lowercase, whereas others are uppercase) 
+# Normalise gene symbols to lowercase because SQL cannot handle case sensitive information 
+final_combined_data$gene_symbol <- tolower(final_combined_data$gene_symbol)
+normalised_gene_symbol <- final_combined_data
+
+# Check the first few rows to confirm the transformation
+head(normalised_gene_symbol)
+
+# Save the output file
+write.csv(normalised_gene_symbol, "~/Desktop/DCDM_GRP7/outputs/normalised.csv", row.names = FALSE)
+```
+
+### Validate string length for parameter_id
+
+```{r}
+# Create a loop
+validate_parameter_id <- function (x, dataType, min_val, max_val) { # Validate length of elements in the vector 'x'
+  if (tolower(dataType) == "string") { # Check if the `dataType` (converted to lowercase) is a string
+    invalid_parameter_id <- which(sapply(x, nchar) < min_val | sapply (x, nchar) > max_val)  # If the string length is less than the minimum value, or more than the maximum value, the result was stored in invalid_parameter_id
+    return(invalid_parameter_id) # Returns the invalid elements
+  } 
+}
+  
+# Apply the function to the parameter_id 
+invalid_parameter_id <- validate_parameter_id (normalised_gene_symbol$parameter_id, "string", 15, 18)  # In the final combined data, looking at the parameter_id column, make sure the elements have a string length with a minimum value of 15, and maximum value of 18
+
+#Print results 
+print(invalid_parameter_id)
+
+# The returned results show 0 invalid parameter ids. This means that all strings are valid, and have the lengths defined in the SOP file
+```
+
+### Validate string length for parameter_name
+
+```{r}
+# Create a loop
+validate_parameter_name <- function (x, dataType, min_val, max_val) { # Validate length of elements in the vector 'x'
+  if (tolower(dataType) == "string") { # Check if the `dataType` (converted to lowercase) is a string
+    invalid_parameter_name <- which(sapply(x, nchar) < min_val | sapply (x, nchar) > max_val)  # If the string length is less than the minimum value, or more than the maximum value, the result was stored in invalid_parameter_name
+    return(invalid_parameter_name) # Returns the invalid elements
+  } 
+}
+  
+# Apply the function to the parameter_name
+invalid_parameter_name <- validate_parameter_name(normalised_gene_symbol$parameter_name, "string", 2, 74) # In the final combined data, looking at the parameter_name column, make sure the elements have a string length with a minimum value of 2, and maximum value of 74
+
+#Print results 
+print(invalid_parameter_name)
+
+# The returned results show 0 invalid parameter names. This means that all strings are valid, and have the lengths defined in the SOP file
+```
+
+### Validate the mouse life stage to the 7 categories outlined in the SOP file 
+
+```{r}
+# Create a loop 
+validate_mouse_life_stage <- function (x, field_name) { # Validate column names in the vector 'x'
+  if (field_name == "mouse_life_stage") {
+    valid_mouse_life_stage <- c("E12.5", "E15.5", "E18.5", "E9.5", "Early adult", "Late adult", "Middle aged adult") # Define a vector containing all valid mouse life stages
+    invalid_mouse_life_stage <- which(!(x %in% valid_mouse_life_stage)) # If the mouse life stages do not match the seven categories, the result was stored in invalid_mouse_life_stage
+    return(invalid_mouse_life_stage) # Returns the invalid elements
+  }
+}
+
+# Apply the function to the mouse_life_stage
+invalid_mouse_life_stage <- validate_mouse_life_stage(normalised_gene_symbol$mouse_life_stage, "mouse_life_stage") # In the final combined data, looking at the parameter_name column, make sure the elements match a life stage out of the seven 
+
+#Print the invalid rows 
+print(invalid_mouse_life_stage)
+
+# Print the total number of invalid mouse strains
+cat("Total number of invalid mouse life stages:", length(invalid_mouse_life_stage))
+
+# The results show there are 0 entries with invalid life stages
+```
+
+### Validate the range of the float p-value
+
+```{r}
+# Create a loop 
+validate_p_value <- function (x, min_val, max_val) { # Validate column values in the vector 'x'
+  x <- as.numeric(x)
+  invalid_p_value <- which(as.numeric(x) < min_val | as.numeric(x) > max_val) # If the p-value is less than the minimum value, or more than the maximum value, the result was stored in invalid_p_value
+  return(invalid_p_value) # Return invalid elements 
+}
+  
+# Apply the function to p_values
+invalid_p_value <- validate_p_value(normalised_gene_symbol$pvalue, 0, 1) # In the final combined data, looking at the p_value column, make sure the p-values are between 0 and 1
+
+#Print the total number of invalid p-values 
+cat("Total number of invalid p-values:", length(invalid_p_value))
+
+# The total entries of invalid p-values is 813. This means that 813 rows are greater than 1 or lower than 0
+
+# As there are 813 invalid rows, these were removed from the final combined data
+removed_p_values <- normalised_gene_symbol[-invalid_p_value, ]
+
+# Prints the final number of rows remaining after removing invalid cases
+cat("Number of rows after removing invalid mouse strains:", nrow(removed_p_values))
+# The output is 142066 rows
+
+# Save the output file 
+write.csv(removed_p_values, "~/Desktop/DCDM_GRP7/outputs/removed_p_values.csv", row.names = FALSE)
+# The output file was saved, to be used for the next stage of cleaning 
+```
+
+### Validate the mouse strain to the 4 categories outlined in the SOP file 
+
+```{r}
+# Create a loop 
+validate_mouse_strain <- function (x, field_name) { # Validate column values in the vector 'x'
+  if (field_name == "mouse_strain") {
+    valid_mouse_strains <- c("C57BL", "B6J", "C3H", "129SV") # Define a vector containing all valid mouse strains 
+    invalid_mouse_strain <- which(!(x %in% valid_mouse_strains)) # Invalid mouse strains that do not match the vectors are stored in the invalid_mouse_strains
+    return(invalid_mouse_strain) # Returns the invalid elements 
+  }
+}
+
+# Apply the function to mouse strains 
+invalid_mouse_strain <- validate_mouse_strain(removed_p_values$mouse_strain, "mouse_strain")
+
+#Print the invalid rows 
+print(invalid_mouse_strain)
+
+# Print the total number of invalid mouse strains
+cat("Total number of invalid mouse strain:", length(invalid_mouse_strain))
+
+# The results show there are 1135 invalid mouse strain entries. There are 1135 strains that do not match the required stages in the SOP file
+
+#Final combined data with the removed invalid entries 
+clean_final_data <- removed_p_values[-invalid_mouse_strain, ]
+
+#Prints the final number of rows remaining after removing invalid cases.
+cat("Number of rows after removing invalid mouse strains:", nrow(clean_final_data))
+# The output 140931 rows
+
+# Save the output file, for further data cleaning
+write.csv(clean_final_data, "~/Desktop/DCDM_GRP7/outputs/clean_final_data.csv", row.names = FALSE)
+```
+
+### Looking for Duplicates
+
+```{r}
+# Find duplicate rows
+duplicates <- duplicated(clean_final_data)
+
+# View duplicate rows
+duplicate_rows <- clean_final_data[duplicates, ]
+print(duplicate_rows)
+# There are no duplicate rows
+
+# Looking for duplicates in the unique identifier : analysis_id
+duplicates_in_column <- clean_final_data[duplicated(clean_final_data$analysis_id), ]
+print(duplicates_in_column)
+```
+
+
+# 2B: Cleaning the Disease information file
+
+```{r}
+# Install and load packages 
+# install.packages("tibble")
+library(tibble)
+```
+
+## Remove the header in bash
+```{bash}
+# Remove the first row (header) containing 'x'
+sed '1D' Disease_information.txt > Disease_information_no_header.txt 
+
+# Remove the numbers in quotation marks (e.g "1")
+sed 's/"[0-9]*" "//g' Disease_information_no_header.txt > Disease_information_numbers_removed.txt 
+
+# Remove unnecessary and inconsistent quotations across the file
+sed 's/"//g' Disease_information_numbers_removed.txt > Disease_information_clean.txt 
+
+# Using the SFTP command, the file was transferred out of the HPC onto our local project area
+```
+
+## Looping to assign correct columns
+There are inconsistent commas in the CSV file (e.g some rows had 3 or 4 or 5 etc)
+```{r}
+# Loop to process each line
+process_line <- function(line) {
+  # Split the line by commas
+  split_line <- strsplit(line, ",")[[1]]
+  
+  # Check if the line has enough parts (at least 3 columns)
+  if (length(split_line) >= 3) {
+    # First column: everything before the first comma
+    first_column <- split_line[1]
+    
+    # Last column: everything after the last comma
+    last_column <- split_line[length(split_line)]
+    
+    # Second-to-last column: everything between the second-to-last and last comma
+    second_last_column <- split_line[length(split_line)-1]
+    
+    # Remainder as the second column: everything else in between
+    second_column <- paste(split_line[2:(length(split_line)-2)], collapse = ",")
+    
+    # Return as a named vector
+    return(c(first_column = first_column, second_column = second_column, 
+             second_last_column = second_last_column, last_column = last_column))
+  } else {
+    # If the line doesn't have enough columns, return as is
+    return(c(first_column = split_line[1], second_column = "", 
+             second_last_column = "", last_column = ""))
+  }
+}
+
+# Read the file line by line
+lines <- readLines("~/Desktop/DCDM_GRP7/outputs/Disease_information_clean.txt")
+
+# Apply the function to each line and store results in a data frame
+clean_disease <- t(sapply(lines, process_line))
+
+# Convert the result to a data frame
+clean_disease <- as.data.frame(clean_disease)
+
+# View the processed data
+View(clean_disease)
+```
+
+## Convert to tibble for easy visualisation
+
+```{r}
+clean_disease_correct_row_names = as_tibble(clean_disease, rownames = "disease_id")
+View(clean_disease_correct_row_names)
+
+#remove first column
+clean_disease_correct_row_names2 = clean_disease_correct_row_names[, -1]
+View(clean_disease_correct_row_names2)
+```
+
+## Rename the header with the correct column ids
+
+```{r}
+# Set the first row as the column names
+colnames(clean_disease_correct_row_names2) = clean_disease[1, ]
+
+# Remove the first row which is now the header
+clean_disease_info = clean_disease_correct_row_names2[-1, ]  
+
+# View the updated dataframe
+View(clean_disease_info)
+
+# Check for missing values
+sum(is.na(clean_disease_info)) 
+
+# Save the output as a CSV file 
+write.csv(clean_disease_info, "~/Desktop/DCDM_GRP7/outputs/Disease_information_clean.csv", row.names = FALSE)
+
+```
+
+# 2C: Cleaning Parameter Description File
+
+```{bash}
+# Remove the first row (header) containing 'x'
+sed '1D' IMPC_parameter_description.txt > IMPC_parameter_description_no_header.txt
+
+# Remove the numbers in quotation marks (e.g "1")
+sed 's/"[0-9]*" "//g' IMPC_parameter_description_no_header.txt > IMPC_parameter_description_numbers_removed.txt
+
+# Rename column header 
+sed -i '1s/.*/impcParameterOrigId, name, description, parameter_id/' IMPC_parameter_description_numbers_removed.txt  
+
+# Remove unnecessary and inconsistent quotations across the file
+sed 's/"//g' IMPC_parameter_description_numbers_removed.txt > IMPC_parameter_description_clean.txt
+
+# Using the SFTP command, the file was transferred out of the HPC onto our local project area
+```
+
+##Looping to assign correct columns
+
+```{r}
+# Loop to process each line
+process_line2 <- function(line) {
+  # Split the line by commas
+  split_line <- strsplit(line, ",")[[1]]
+  
+  # Check if the line has enough parts (at least 3 columns)
+  if (length(split_line) >= 3) {
+    # First column: everything before the first comma
+    first_column <- split_line[1]
+    
+    # Last column: everything after the last comma
+    last_column <- split_line[length(split_line)]
+    
+    # Second-to-last column: everything between the second-to-last and last comma
+    second_last_column <- split_line[length(split_line)-1]
+    
+    # Remainder as the second column: everything else in between
+    second_column <- paste(split_line[2:(length(split_line)-2)], collapse = ",")
+    
+    # Return as a named vector
+    return(c(first_column = first_column, second_column = second_column, 
+             second_last_column = second_last_column, last_column = last_column))
+  } else {
+    # If the line doesn't have enough columns, return as is
+    return(c(first_column = split_line[1], second_column = "", 
+             second_last_column = "", last_column = ""))
+  }
+}
+
+# Read the file line by line
+lines2 <- readLines("~/Desktop/DCDM_GRP7/outputs/IMPC_parameter_description_clean.txt")
+
+# Apply the function to each line and store results in a data frame
+clean_PD <- t(sapply(lines2, process_line2))
+
+# Convert the result to a data frame
+clean_PD <- as.data.frame(clean_PD)
+
+# View the processed data
+View(clean_PD)
+```
+
+## Convert to tibble for easy visualisation
+
+```{r}
+clean_PD_correct_row_names = as_tibble(clean_PD, rownames = "impcParameterOrigId")
+View(clean_PD_correct_row_names)
+
+# Remove first column
+clean_PD_correct_row_names = clean_PD_correct_row_names[, -1]
+View(clean_PD_correct_row_names)
+```
+
+## Rename the header with the correct column ids
+
+```{r}
+ # Set the first row as the column names
+colnames(clean_PD_correct_row_names) = clean_PD_correct_row_names[1, ]  
+
+# Remove the first row which is now the header
+clean_parameter_description = clean_PD_correct_row_names[-1, ]            
+
+# View the updated dataframe
+View(clean_parameter_description)
+# When we viewed the dataset, there were empty cells in the description column
+
+# Replace missing values with NA
+
+# Sets NA values to empty cells 
+clean_parameter_description[clean_parameter_description == " " ] <- NA 
+
+# Sets NA values into a string
+clean_parameter_description[is.na(clean_parameter_description)] <- "NA" 
+
+# Check if it worked 
+View(clean_parameter_description)
+
+# Check for missing values
+sum(is.na(clean_parameter_description)) 
+
+# Save the output file 
+write.csv(clean_parameter_description, "~/Desktop/DCDM_GRP7/outputs/IMPC_parameter_description_clean.csv", row.names = FALSE)
+```
+
+# 2D: Cleaning Procedure file
+
+```{bash}
+# Remove the numbers in quotation marks (e.g "1")
+sed 's/"[0-9]*" "//g' IMPC_procedure.txt > IMPC_procedure_numbers_removed.txt
+
+# Remove the column header, and remove the procedureID column as it contained no values
+sed -i '1s/.*/name, description, isMandatory, impcParameterOrigId/' IMPC_procedure_numbers_removed.txt 
+
+# Remove unnecessary and inconsistent quotations across the file
+sed 's/"//g' IMPC_procedure_numbers_removed.txt > IMPC_procedure_clean.txt  
+
+# Using the SFTP command, the file was transferred out of the HPC onto our local project area
+```
+
+## Looping to assign correct columns
+
+```{r}
+# Loop to process each line
+process_line3 <- function(line) {
+  # Split the line by commas
+  split_line <- strsplit(line, ",")[[1]]
+  
+  # Check if the line has enough parts (at least 3 columns)
+  if (length(split_line) >= 3) {
+    # First column: everything before the first comma
+    first_column <- split_line[1]
+    
+    # Last column: everything after the last comma
+    last_column <- split_line[length(split_line)]
+    
+    # Second-to-last column: everything between the second-to-last and last comma
+    second_last_column <- split_line[length(split_line)-1]
+    
+    # Remainder as the second column: everything else in between
+    second_column <- paste(split_line[2:(length(split_line)-2)], collapse = ",")
+    
+    # Return as a named vector
+    return(c(first_column = first_column, second_column = second_column, 
+             second_last_column = second_last_column, last_column = last_column))
+  } else {
+    # If the line doesn't have enough columns, return as is
+    return(c(first_column = split_line[1], second_column = "", 
+             second_last_column = "", last_column = ""))
+  }
+}
+
+# Read the file line by line
+lines3 <- readLines("~/Desktop/DCDM_GRP7/outputs/IMPC_procedure_clean.txt")
+
+# Apply the function to each line and store results in a data frame
+clean_Pro <- t(sapply(lines3, process_line3))
+
+# Convert the result to a data frame
+clean_Pro <- as.data.frame(clean_Pro)
+
+# View the processed data
+View(clean_Pro)
+```
+
+## Convert to tibble for easy visualisation
+
+```{r}
+# Changes rowname to correct first column name
+clean_Pro_correct_row_names = as_tibble(clean_Pro, rownames = "name") 
+View(clean_Pro_correct_row_names)
+
+# Remove the first column
+clean_Pro_correct_row_names = clean_Pro_correct_row_names[, -1]
+View(clean_Pro_correct_row_names)
+```
+
+## Rename the header with the correct column ids
+
+```{r}
+ # Set the first row as the column names
+colnames(clean_Pro_correct_row_names) = clean_Pro_correct_row_names[1, ]  
+
+# Remove the first row which is now the header
+clean_Pro = clean_Pro_correct_row_names[-1, ]    
+
+# View the updated dataframe
+View(clean_Pro)
+# When we viewed the dataset, there were empty cells in the description column
+
+# Replace NA values in a specific column with the string "NA"
+clean_Pro[clean_Pro == ' '] <- NA
+clean_Pro[is.na(clean_Pro)] <- "NA"
+
+# View the updated column
+View(clean_Pro)
+sum(is.na(clean_Pro)) #check for missing values
+
+# Save the output file 
+write.csv(clean_Pro, "~/Desktop/DCDM_GRP7/outputs/IMPC_procedure_clean.csv", row.names = FALSE)
+```
