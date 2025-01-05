@@ -10,6 +10,12 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Step 2: Data Cleaning 
 
+```{r}
+#Install and load the tidyverse package. 
+install.packages("tidyverse")
+library(tidyverse)
+```
+
 # 2A: Cleaning the Mouse Files 
 ## Validation 
 Here, we ensured each element in the columns matched the description outlined in the SOP file. 
