@@ -7,7 +7,7 @@ library(ggplot2)
 library(dplyr)
 
 # Load the clean mouse data 
-data_rshiny <- read.csv("~/Desktop/DCDM_Group7/outputs/clean_final_data.csv")
+data_rshiny <- read.csv("~/Desktop/DCDM_GRP7/outputs/clean_final_data.csv")
 
 # Use the pipe function to transform the p-value to -10log scale, and then filter by significance
 # We apply the -log10 scale for better visualisation of small p-values, emphasising statistically significant p-values
