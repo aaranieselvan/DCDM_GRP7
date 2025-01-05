@@ -313,9 +313,6 @@ colnames(clean_disease_correct_row_names2) = clean_disease[1, ]
 # Remove the first row which is now the header
 clean_disease_info = clean_disease_correct_row_names2[-1, ]  
 
-# Check for missing values
-sum(is.na(clean_disease_info)) 
-
 #Check for duplicate entries
 num_duplicates_diseaseinfo <- sum(duplicated(clean_disease_info))
 print(paste("Number of duplicate rows:", num_duplicates_diseaseinfo))
