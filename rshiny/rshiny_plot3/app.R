@@ -1,19 +1,23 @@
+# RShiny Plot 3
+
+# Plot 3 shows hierarchical clustering of gene symbols based on log-transformed p-values, with the top 25 most significant genes displayed by default
+# Users can adjust the number of clusters and select specific genes to explore their clustering behaviour
+
+# Install and load libraries 
+# The packages were installed in the console prior to loading
 library(shiny)
 library(dplyr)
 library(pheatmap)
 library(RColorBrewer)
 
-#Plot3:Plot 3 shows hierarchical clustering of gene symbols based on log-transformed 
-#p-values, with the top 25 most significant genes displayed by default. Users can adjust the 
-#number of clusters and select specific genes to explore their clustering behavior, with a color-coded heatmap and a list of genes in each cluster.
 
 # Import cleaned data file
 data <- read.csv("~/Desktop/DCDM_GRP7/outputs/clean_final_data.csv")
 print(nrow(data))  # Check the total number of rows (should be 140931)
 
-#Filter to  retain statistically significant pvalues (p <= 0.05) 
-#log transform significant pvalues to prepare for clustering of gene_symbols 
-#and  exclude all infinite or missing log_p_values
+# Filter to  retain statistically significant pvalues (p <= 0.05) 
+# Log transform significant pvalues to prepare for clustering of gene_symbols 
+# Exclude all infinite or missing log_p_values
 filtered_p_value_data <- data %>%
   mutate(pvalue = as.numeric(pvalue)) %>%
   filter(pvalue > 0 & pvalue <= 0.05) %>%
@@ -36,7 +40,7 @@ top_25_genes <- clustering_data %>%
 
 # Define user interface with number of clusters, gene selection & download heatmap button
 ui <- fluidPage(
-  titlePanel("Hierarchical Clustering of Gene_Symbols Based normalised log p-value"),
+  titlePanel("Hierarchical Clustering of Gene Symbols Based on Normalised Log P-Values"),
   sidebarLayout(
     sidebarPanel(
       sliderInput("clusters", "Number of Clusters:", min = 2, max = 10, value = 3),
@@ -96,7 +100,7 @@ server <- function(input, output, session) {
     clustering_matrix <- scale(clustering_matrix)
     
     # Rename the column to normalised log p-value)
-    colnames(clustering_matrix) <- "normalised log p-value"
+    colnames(clustering_matrix) <- "Normalised Log P-Value"
     
     #calculate pairwise euclidean distances between rows of matrix which is used for
     #hierarchical clustering to construct a dendogram which visually represents 
@@ -157,7 +161,7 @@ server <- function(input, output, session) {
       fontsize_number = fontsize_number,
       treeheight_row = 100,
       treeheight_col = 100,
-      main = paste("Clustering of genes by ", input$clusters, " clusters", sep = ""),
+      main = paste("Clustering of Genes by ", input$clusters, " Clusters", sep = ""),
       height = plot_height,
       width = plot_width,
       angle_col = 0  # This will force the column label to remain horizontal (default)
