@@ -16,6 +16,12 @@ install.packages("tidyverse")
 library(tidyverse)
 ```
 
+#Import collated file for cleaning
+```{r}
+final_combined_data <- read.csv(final_combined_data, "~/Desktop/DCDM_GRP7/outputs/final_combined_output.csv", row.names = FALSE)
+```
+
+
 # 2A: Cleaning the Mouse Files 
 ## Validation 
 Here, we ensured each element in the columns matched the description outlined in the SOP file. 
@@ -462,7 +468,7 @@ write.csv(clean_parameter_description, "~/Desktop/DCDM_GRP7/outputs/IMPC_paramet
 # Remove the numbers in quotation marks (e.g "1")
 sed 's/"[0-9]*" "//g' IMPC_procedure.txt > IMPC_procedure_numbers_removed.txt
 
-# Remove the column header, and remove the procedureID column as it contained no values
+# Rename the column headings, and remove the procedureID column as it contained no values
 sed -i '1s/.*/name, description, isMandatory, impcParameterOrigId/' IMPC_procedure_numbers_removed.txt 
 
 # Remove unnecessary and inconsistent quotations across the file
