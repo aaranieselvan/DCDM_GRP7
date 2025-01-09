@@ -54,7 +54,7 @@ for (file in file_list) {
     setNames(data$field)
   
   # Quality check to see missing columns with NA
-  missing_fields <- setdiff(correct_fields, names(reshaped_data))  #We found no missing fields, so NAs were added
+  missing_fields <- setdiff(correct_fields, names(reshaped_data)) 
   
   # Add the count of missing fields to the total
   total_missing_fields <- total_missing_fields + length(missing_fields)
