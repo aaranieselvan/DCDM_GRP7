@@ -61,13 +61,13 @@ server <- function(input, output) {
       filter(Significant == TRUE & parameter_name == input$parameter_name)
     
     # Generate the plot
-    plot_volcano(filtered_data)
+    plot_lollipop(filtered_data)
   })
 }
 
 
 # Define a function to plot significant p-values
-plot_volcano <- function(filtered_data) {
+plot_lollipop <- function(filtered_data) {
   ggplot(filtered_data, aes(x = gene_symbol, y = pvalue)) +
     
     # Add vertical segments representing the -log10(p-value) from y=0 to the log_p_value
