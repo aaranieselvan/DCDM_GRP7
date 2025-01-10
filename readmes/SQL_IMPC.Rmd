@@ -12,7 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ##Create and load csv file into mice_info table
 ```{sql connection=}
-#varchars kept to a minimum of 100 characters
+#varchars kept to a minimum of 100 characters.
 CREATE TABLE mouse_clean (
 analysis_id VARCHAR(100),                
 gene_accession_id VARCHAR(100),
