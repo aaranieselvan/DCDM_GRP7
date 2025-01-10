@@ -10,6 +10,12 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 #1 Create the tables which contain the cleaned experimental analysis data
 
+##Create and use the database
+```{sql connection=}
+CREATE DATABASE impc_micedcdm;
+use impc_micedcdm;
+```
+
 ##Create and load csv file into mice_info table
 ```{sql connection=}
 #Varchars kept to a minimum of 100 characters.
