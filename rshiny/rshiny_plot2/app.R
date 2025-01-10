@@ -15,7 +15,9 @@ data <- read.csv("~/Desktop/DCDM_GRP7/outputs/clean_final_data.csv")
 data <- data %>%
   mutate(
     log_p_value = -log10(pvalue),  # Transform p-value to -log10 scale
-    Significant = pvalue <= 0.05  # Add significance threshold
+    Significant = pvalue <= 0.05,  # Add significance threshold
+    FDR = p.adjust(pvalue, method = "BH"),  # Apply Benjamini-Hochberg FDR adjustment
+    log_p_value = -log10(FDR)  # Transform FDR-adjusted p-value to -log10 scale
   )
 
 
