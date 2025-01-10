@@ -74,7 +74,7 @@ cat("Total number of missing fields:", total_missing_fields, "\n")
 ```
 
 
-###Combine all data frames into one - COLLATION
+###Combine all data frames into one 
 ```{r}
 # Combine individual CSV files into one dataframe
 final_combined_data <- bind_rows(combined_data)
