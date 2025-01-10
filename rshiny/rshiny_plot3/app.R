@@ -1,3 +1,5 @@
+# Plot 3.3 heatmap 
+
 library(shiny)
 library(dplyr)
 library(pheatmap)
@@ -6,28 +8,40 @@ library(RColorBrewer)
 # Import cleaned data file
 data <- read.csv("~/Desktop/DCDM_GRP7/outputs/clean_final_data.csv")
 print(nrow(data))  # Check the total number of rows (should be 140931)
+View(data)
 
 # Step 1: Filter to retain statistically significant p-values (p <= 0.05)
-filtered_p_value_data <- data %>%
+filtered_p_value_data1 <- data %>%
   mutate(pvalue = as.numeric(pvalue)) %>%  # Convert the 'pvalue' column to numeric
   filter(pvalue > 0 & pvalue <= 0.05) %>%  # Retain rows where 'pvalue' is greater than 0 and less than or equal to 0.05
   filter(!is.na(pvalue) & is.finite(pvalue)) # Remove rows with NA or non-finite p-values
-
-print(nrow(filtered_p_value_data))  # Check the filtered number of rows
+print(nrow(filtered_p_value_data1))  # Check the filtered number of rows (should be 910) 
 
 # Step 2: Apply FDR correction (Benjamini-Hochberg procedure)
-filtered_p_value_data <- filtered_p_value_data %>%
+negative_or_zero_fdr <- filtered_p_value_data1 %>%
   mutate(fdr = p.adjust(pvalue, method = "BH"))  # Add the FDR-adjusted p-values
 
-# Step 3: Log-transform FDR-adjusted p-values (instead of raw p-values)
-filtered_p_value_data <- filtered_p_value_data %>%
+# Step 3: Check for negative or zero FDR values
+negative_or_zero_fdr_check <- negative_or_zero_fdr %>%
+  filter(fdr <= 0)  # Filter out rows with FDR <= 0
+
+if (nrow(negative_or_zero_fdr_check) > 0) {
+  stop("Error: There are negative or zero FDR values. Please investigate the data before proceeding.")
+} else {
+  print("FDR values are valid (none are negative or zero). Proceeding with log transformation.")
+}
+
+#Output = FDR values are valid (none are negative or zero). Proceeding with log transformation.
+
+# Step 4: Log-transform FDR-adjusted p-values (instead of raw p-values)
+log_transformed_FDR <- negative_or_zero_fdr %>%
   mutate(log_fdr = -log10(fdr)) %>%  # Log-transform the FDR-adjusted p-values
   filter(!is.na(log_fdr) & is.finite(log_fdr))  # Remove rows where log_fdr is NA or non-finite
 
-print(nrow(filtered_p_value_data))  # Check the number of rows after transformation
+print(nrow(log_transformed_FDR))  # Check the number of rows after transformation (should be 910)
 
 # Combine multiple identical gene_symbols (who have different p values) into a single value for clustering
-clustering_data <- filtered_p_value_data %>%
+clustering_data <- log_transformed_FDR %>%
   group_by(gene_symbol) %>%  # Group data by unique 'gene_symbol'
   summarise(log_fdr = mean(log_fdr, na.rm = TRUE),  # Calculate the mean log FDR value for each gene
             mouse_strain = first(mouse_strain),  # Use first strain as a proxy for all strains
@@ -35,7 +49,7 @@ clustering_data <- filtered_p_value_data %>%
             parameter_name = first(parameter_name)) %>%  # Use first parameter name as a proxy for all phenotypes
   ungroup() %>%
   arrange(desc(log_fdr))  # Sort in descending order by log FDR
-print(nrow(clustering_data))  # Check the number of unique gene_symbols
+print(nrow(clustering_data))  # Check the number of unique gene_symbols (should be 123)
 
 # Extract top 25 most significant gene_symbols based on FDR
 top_25_genes <- clustering_data %>%
@@ -44,7 +58,7 @@ top_25_genes <- clustering_data %>%
 # Define user interface with number of clusters, gene selection & download heatmap button
 ui <- fluidPage(
   
-  titlePanel("Hierarchical Clustering of Mouse Genes Based on Phenotypic Significance Associations"),
+  titlePanel("Hierarchical Clustering of Mouse Gene_Symbols Based on Normalised Log FDR"),
   
   sidebarLayout(
     
@@ -63,7 +77,7 @@ ui <- fluidPage(
       
       textOutput("selected_genes_count"),
       actionButton("reset_button", "Reset to Top 25 gene_symbols"),
-      actionButton("focus_button", "Focus on Specific Genes (tuft1, sun5, mettl5)"),
+      actionButton("focus_button", "Focus on Specific gene_symbols (tuft1, sun5, mettl5)"),
       downloadButton("download_heatmap", "Download Heatmap"),
       downloadButton("download_data", "Download Cluster Data"),
       uiOutput("cluster_gene_symbols")
