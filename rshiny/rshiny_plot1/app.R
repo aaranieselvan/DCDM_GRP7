@@ -21,7 +21,7 @@ data_rshiny <- data_rshiny %>%
 ui <- fluidPage(
   
   # Add a title panel to the app
-  titlePanel("Statistically Significant P-Values by Phenotype"), 
+  titlePanel("Significant Phenotypes Based on FDR-Adjusted P-Values"), 
   
   # Layout the app into a sidebar and a main content area
   sidebarLayout(  
@@ -81,7 +81,7 @@ plot_lollipop <- function(filtered_mouse_data) {
     labs(
       title = "Significant Phenotypic Changes by Knockout Gene",
       x = "Phenotype",
-      y = "-log10(FDR)"
+      y = "Log-Transformed Adjusted P-Values (FDR)"
     ) +
     
     # Adjust plot theme for better fit
