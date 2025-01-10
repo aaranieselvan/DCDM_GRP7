@@ -12,6 +12,7 @@ data_rshiny <- read.csv("~/Desktop/DCDM_GRP7/outputs/clean_final_data.csv")
 # Apply the significance threshold, calculate FDR, and then transform to log scale
 data_rshiny <- data_rshiny %>%
   mutate(
+    pvalue = ifelse(pvalue < 1e-10, 1e-10, pvalue),  # Set p-values less than 1e-10 to 1e-10
     Significant = pvalue <= 0.05,  # Apply the significance threshold (0.05)
     FDR = p.adjust(pvalue, method = "BH"),  # Apply Benjamini-Hochberg FDR adjustment
     log_p_value = -log10(FDR)  # Transform FDR-adjusted p-value to -log10 scale
