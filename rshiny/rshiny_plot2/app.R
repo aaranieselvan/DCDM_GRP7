@@ -87,7 +87,7 @@ plot_lollipop <- function(filtered_data) {
     labs(
       title = "Statistical Scores of Knockout Mice for a Selected Phenotype",
       x = "Gene Symbol",
-      y = "-log10(FDR)"
+      y = "Log-Transformed Adjusted P-Values (FDR)"
     ) +
     
     # Adjust plot theme for better fit
