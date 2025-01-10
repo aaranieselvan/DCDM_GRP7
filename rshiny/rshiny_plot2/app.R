@@ -74,7 +74,7 @@ plot_lollipop <- function(filtered_data) {
     geom_segment(aes(x = gene_symbol, y = 0, yend = pvalue), 
                  size = 1, color = "lightpink") +
     
-    # Add points on the plot representing the -log10(p-value) for each phenotype
+    # Add points on the plot representing the -log10(FDR) for each phenotype
     geom_point(size = 4, color = "deeppink") +
     
     # Add text labels for the log_p_value on top of each point and adjust positioning 
@@ -87,7 +87,7 @@ plot_lollipop <- function(filtered_data) {
     labs(
       title = "Statistical Scores of Knockout Mice for a Selected Phenotype",
       x = "Gene Symbol",
-      y = "-log(p-Value)"
+      y = "-log10(FDR)"
     ) +
     
     # Adjust plot theme for better fit
