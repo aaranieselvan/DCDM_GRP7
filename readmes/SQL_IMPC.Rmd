@@ -8,12 +8,13 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-#1 Create the tables which contain the raw experimental analysis data
+#1 Create the tables which contain the cleaned experimental analysis data
 
+##Create and load csv file into mice_info table
 ```{sql connection=}
-#Creating the mouse_clean table
+#varchars kept to a minimum of 100 characters
 CREATE TABLE mouse_clean (
-analysis_id VARCHAR(100),
+analysis_id VARCHAR(100),                
 gene_accession_id VARCHAR(100),
 gene_symbol VARCHAR(100),
 mouse_strain VARCHAR(100),
@@ -23,7 +24,7 @@ parameter_name VARCHAR(100),
 pvalue FLOAT
 );
 
-#Load data from clean_final_data.csv into the mouse_clean table
+#Load data from clean_final_data.csv into the mice_info table
 LOAD DATA INFILE 'C:/ProgramData/MySQL/MySQL Server 8.0/Uploads/clean_final_data.csv'
 INTO TABLE mouse_clean
 FIELDS TERMINATED BY ','
@@ -32,8 +33,9 @@ LINES TERMINATED BY '\n'
 IGNORE 1 ROWS;
 ```
 
+##Create and load csv file into procedure_info
 ```{sql connection=}
-#Create procedure_info table
+#High character limit placed for future scalability.
 CREATE TABLE procedure_info (
 name VARCHAR(1000),
 description VARCHAR(1500),
@@ -44,18 +46,18 @@ impcParameterOrigId INT
 #Load data from IMPC_procedure_clean.csv into the table
 LOAD DATA INFILE 'C:/ProgramData/MySQL/MySQL Server 8.0/Uploads/IMPC_procedure_clean.csv'
 INTO TABLE procedure_info
-FIELDS TERMINATED BY ','
+FIELDS TERMINATED BY ','    
 ENCLOSED BY '"'
 LINES TERMINATED BY '\r\n'
 IGNORE 1 ROWS;
 
-#Add procedure_id to the table
+#Add procedure_id to the table as it was removed during cleaning where no values were found in the column.
 alter table procedure_info
 add procedure_id VARCHAR(100);
 ```
 
+##Create and load csv file into parameter_description table
 ```{sql connection=}
-#Create parameter_description table
 CREATE TABLE parameter_description (
 impcParameterOrigId INT,
 name VARCHAR(1000),
@@ -73,8 +75,8 @@ IGNORE 1 ROWS;
 
 ```
 
+##Create and load csv file into disease_info table
 ```{sql connection=}
-#Create disease_info table
 CREATE TABLE disease_info (
 disease_id VARCHAR(100),
 disease_term VARCHAR(1000),
@@ -92,9 +94,10 @@ IGNORE 1 ROWS;
 ```
 
 #2 Create the joining tables
+
+##Create mouse_disease_relationship table
 ```{sql connection=}
 
-#Create mouse_disease_relationship table
 CREATE TABLE mouse_disease_relationship (
 disease_id VARCHAR(100),
 disease_term VARCHAR(1000),
@@ -104,16 +107,23 @@ analysis_id VARCHAR(100),
 gene_symbol VARCHAR(100)
 );
 
-#Add data from disease_info and mice_info into mouse_disease_relationship
-INSERT INTO mouse_disease_relationship (disease_term, disease_id, gene_accession_id, phenodigm_score, analysis_id, gene_symbol)
-SELECT disease_info.disease_term, disease_info.disease_id, disease_info.gene_accession_id, disease_info.phenodigm_score, mice_info.analysis_id, mice_info.gene_symbol
-FROM disease_info
-LEFT JOIN mice_info
-ON disease_info.gene_accession_id = mice_info.gene_accession_id;
+#Select and insert data from disease_info and mice_info into mouse_disease_relationship based on gene_accession_id
+INSERT INTO 
+  mouse_disease_relationship (disease_term, disease_id, gene_accession_id, phenodigm_score, analysis_id,
+  gene_symbol)
+SELECT 
+  disease_info.disease_term, disease_info.disease_id, disease_info.gene_accession_id,
+  disease_info.phenodigm_score, mice_info.analysis_id, mice_info.gene_symbol
+FROM 
+  disease_info
+LEFT JOIN 
+  mice_info
+ON 
+  disease_info.gene_accession_id = mice_info.gene_accession_id;
 ```
 
+##Create the mouse_parameter_relationship table
 ```{sql connection=}
-#Create the mouse_parameter_relationship table
 CREATE TABLE mouse_parameter_relationship (
 impcParameterOrigId VARCHAR(100),
 name VARCHAR(1000),
@@ -123,17 +133,26 @@ analysis_id VARCHAR(100),
 gene_symbol VARCHAR(100)
 );
 
-#Add data from parameter_description and mice_info into mouse_parameter_relationship
-INSERT INTO mouse_parameter_relationship (impcParameterOrigId, parameter_id, name, description, analysis_id, gene_symbol)
-SELECT parameter_description.impcParameterOrigId, parameter_description.parameter_id, parameter_description.name, parameter_description.description, mice_info.analysis_id, mice_info.gene_symbol
-FROM parameter_description
-LEFT JOIN mice_info
-ON parameter_description.parameter_id = mice_info.parameter_id;
+#Select and insert data from parameter_description and mice_info into mouse_parameter_relationship based on parameter_id
+INSERT INTO 
+  mouse_parameter_relationship (impcParameterOrigId, parameter_id, name, description, analysis_id,
+  gene_symbol)
+SELECT 
+  parameter_description.impcParameterOrigId, parameter_description.parameter_id,
+  parameter_description.name, parameter_description.description, mice_info.analysis_id,
+  mice_info.gene_symbol
+FROM 
+  parameter_description
+LEFT JOIN 
+  mice_info
+ON 
+  parameter_description.parameter_id = mice_info.parameter_id;
 
 ```
 
+##Create parameter_procedure_relationship table
 ```{sql connection=}
-#Create parameter_procedure_relationship table
+#renamed columns for clarity of where the data was brought in from
 CREATE TABLE parameter_procedure_relationship (
 procedure_id VARCHAR(100),
 procedure_name VARCHAR(1000),
@@ -142,17 +161,25 @@ parameter_id VARCHAR(100),
 impcParameterOrigId VARCHAR(100)
 );
 
-#Add data from procedure_info and parameter_description into parameter_procedure_relationship
-INSERT INTO parameter_procedure_relationship (procedure_id, procedure_name, procedure_description, parameter_id, impcParameterOrigId)
-SELECT procedure_info.procedure_id, procedure_info.name,procedure_info.description, parameter_description.parameter_id, parameter_description.impcParameterOrigId 
-FROM procedure_info
-LEFT JOIN parameter_description
-ON parameter_description.impcParameterOrigId = procedure_info.impcParameterOrigId;
+#Select and insert data from procedure_info and parameter_description into parameter_procedure_relationship based on impcParameterOrigId
+INSERT INTO 
+  parameter_procedure_relationship (procedure_id, procedure_name, procedure_description, parameter_id,
+  impcParameterOrigId)
+SELECT 
+  procedure_info.procedure_id, procedure_info.name,procedure_info.description,
+  parameter_description.parameter_id, parameter_description.impcParameterOrigId 
+FROM 
+  procedure_info
+LEFT JOIN 
+  parameter_description
+ON 
+  parameter_description.impcParameterOrigId = procedure_info.impcParameterOrigId;
 
 ```
 
+##Create mouse_procedure table
 ```{sql connection=}
-#Create mouse_procedure table
+#This table was created to enable querying for procedure info in terms of gene knockouts
 CREATE TABLE mouse_procedure (
 procedure_id VARCHAR(100),
 procedure_name VARCHAR(1000),
@@ -163,16 +190,24 @@ impcParameterOrigId VARCHAR(100)
 );
 
 #Add data from parameter_procedure_relationship and mouse_parameter_relationship into mouse_procedure
-INSERT INTO mouse_procedure (procedure_id, procedure_name, parameter_id, parameter_description_name, gene_symbol, impcParameterOrigId)
-SELECT parameter_procedure_relationship.procedure_id, parameter_procedure_relationship.procedure_name, mouse_parameter_relationship.parameter_id, mouse_parameter_relationship.name, mouse_parameter_relationship.gene_symbol, mouse_parameter_relationship.impcParameterOrigId
-FROM parameter_procedure_relationship
-LEFT JOIN mouse_parameter_relationship
-ON mouse_parameter_relationship.impcParameterOrigId = parameter_procedure_relationship.impcParameterOrigId;
+INSERT INTO 
+  mouse_procedure (procedure_id, procedure_name, parameter_id, parameter_description_name, gene_symbol,
+  impcParameterOrigId)
+SELECT 
+  parameter_procedure_relationship.procedure_id, parameter_procedure_relationship.procedure_name,
+  mouse_parameter_relationship.parameter_id, mouse_parameter_relationship.name,
+  mouse_parameter_relationship.gene_symbol, mouse_parameter_relationship.impcParameterOrigId
+FROM 
+  parameter_procedure_relationship
+LEFT JOIN 
+  mouse_parameter_relationship
+ON 
+  mouse_parameter_relationship.impcParameterOrigId =                                             parameter_procedure_relationship.impcParameterOrigId;
 
 ```
+
 #3 Grouping the parameters together based on their naming similarity
 ```{sql connection=}
-
 #Create groupings table
 CREATE TABLE groupings (
 group_id SERIAL, 
@@ -189,6 +224,16 @@ INSERT INTO groupings (group_name) VALUES
 ('Embryo'),
 ('Image');
 ```
+
+##Check that there are no other contents other than brain weight when selecting with %brain%
+```{sql connection=}
+select parameter_name from mice_info
+where parameter_name like '%brain%';
+
+#Due to no other strings being found, brain weight will be classified only under the grouping - Weight.
+```
+
+##Update the mice_info tables to add groupings
 ```{sql connection=}
 
 #Add group_name to the mice_info table
