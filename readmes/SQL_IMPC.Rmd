@@ -12,7 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ##Create and load csv file into mice_info table
 ```{sql connection=}
-#varchars kept to a minimum of 100 characters.
+#Varchars kept to a minimum of 100 characters.
 CREATE TABLE mouse_clean (
 analysis_id VARCHAR(100),                
 gene_accession_id VARCHAR(100),
@@ -24,7 +24,7 @@ parameter_name VARCHAR(100),
 pvalue FLOAT
 );
 
-#Load data from clean_final_data.csv into the mice_info table
+#Load data from clean_final_data.csv into the mice_info table.
 LOAD DATA INFILE 'C:/ProgramData/MySQL/MySQL Server 8.0/Uploads/clean_final_data.csv'
 INTO TABLE mouse_clean
 FIELDS TERMINATED BY ','
@@ -35,7 +35,7 @@ IGNORE 1 ROWS;
 
 ##Create and load csv file into procedure_info
 ```{sql connection=}
-#High character limit placed for future scalability.
+#High character limit is placed for future scalability.
 CREATE TABLE procedure_info (
 name VARCHAR(1000),
 description VARCHAR(1500),
@@ -43,7 +43,7 @@ isMandatory VARCHAR(1000),
 impcParameterOrigId INT
 );
 
-#Load data from IMPC_procedure_clean.csv into the table
+#Load data from IMPC_procedure_clean.csv into the table.
 LOAD DATA INFILE 'C:/ProgramData/MySQL/MySQL Server 8.0/Uploads/IMPC_procedure_clean.csv'
 INTO TABLE procedure_info
 FIELDS TERMINATED BY ','    
@@ -58,6 +58,7 @@ add procedure_id VARCHAR(100);
 
 ##Create and load csv file into parameter_description table
 ```{sql connection=}
+##High character limit is placed for future scalability.
 CREATE TABLE parameter_description (
 impcParameterOrigId INT,
 name VARCHAR(1000),
@@ -65,7 +66,7 @@ description VARCHAR(1000),
 parameter_id VARCHAR(100)
 );
 
-#Load data from IMPC_parameter_description_clean.csv into the table
+#Load data from IMPC_parameter_description_clean.csv into the table.
 LOAD DATA INFILE 'C:/ProgramData/MySQL/MySQL Server 8.0/Uploads/IMPC_parameter_description_clean.csv'
 INTO TABLE parameter_description
 FIELDS TERMINATED BY ','
@@ -77,6 +78,7 @@ IGNORE 1 ROWS;
 
 ##Create and load csv file into disease_info table
 ```{sql connection=}
+#A minimum varchar of 100 used.
 CREATE TABLE disease_info (
 disease_id VARCHAR(100),
 disease_term VARCHAR(1000),
@@ -84,7 +86,7 @@ gene_accession_id VARCHAR(100),
 phenodigm_score FLOAT
 );
 
-#Load data from Disease_information_clean.csv into the table
+#Load data from Disease_information_clean.csv into the table.
 LOAD DATA INFILE 'C:/ProgramData/MySQL/MySQL Server 8.0/Uploads/Disease_information_clean.csv'
 INTO TABLE disease_info
 FIELDS TERMINATED BY ','
@@ -97,7 +99,7 @@ IGNORE 1 ROWS;
 
 ##Create mouse_disease_relationship table
 ```{sql connection=}
-
+#High character limit is placed for future scalability.
 CREATE TABLE mouse_disease_relationship (
 disease_id VARCHAR(100),
 disease_term VARCHAR(1000),
@@ -107,7 +109,7 @@ analysis_id VARCHAR(100),
 gene_symbol VARCHAR(100)
 );
 
-#Select and insert data from disease_info and mice_info into mouse_disease_relationship based on gene_accession_id
+#Select and insert data from disease_info and mice_info into mouse_disease_relationship based on gene_accession_id.
 INSERT INTO 
   mouse_disease_relationship (disease_term, disease_id, gene_accession_id, phenodigm_score, analysis_id,
   gene_symbol)
@@ -124,6 +126,7 @@ ON
 
 ##Create the mouse_parameter_relationship table
 ```{sql connection=}
+#High character limit is placed for future scalability.
 CREATE TABLE mouse_parameter_relationship (
 impcParameterOrigId VARCHAR(100),
 name VARCHAR(1000),
@@ -133,7 +136,7 @@ analysis_id VARCHAR(100),
 gene_symbol VARCHAR(100)
 );
 
-#Select and insert data from parameter_description and mice_info into mouse_parameter_relationship based on parameter_id
+#Select and insert data from parameter_description and mice_info into mouse_parameter_relationship based on parameter_id.
 INSERT INTO 
   mouse_parameter_relationship (impcParameterOrigId, parameter_id, name, description, analysis_id,
   gene_symbol)
@@ -152,7 +155,7 @@ ON
 
 ##Create parameter_procedure_relationship table
 ```{sql connection=}
-#renamed columns for clarity of where the data was brought in from
+#Renamed columns for clarity of where the data was brought in from.
 CREATE TABLE parameter_procedure_relationship (
 procedure_id VARCHAR(100),
 procedure_name VARCHAR(1000),
@@ -161,7 +164,7 @@ parameter_id VARCHAR(100),
 impcParameterOrigId VARCHAR(100)
 );
 
-#Select and insert data from procedure_info and parameter_description into parameter_procedure_relationship based on impcParameterOrigId
+#Select and insert data from procedure_info and parameter_description into parameter_procedure_relationship based on impcParameterOrigId.
 INSERT INTO 
   parameter_procedure_relationship (procedure_id, procedure_name, procedure_description, parameter_id,
   impcParameterOrigId)
@@ -179,7 +182,7 @@ ON
 
 ##Create mouse_procedure table
 ```{sql connection=}
-#This table was created to enable querying for procedure info in terms of gene knockouts
+#This table was created to enable querying for procedure info in terms of gene knockouts.
 CREATE TABLE mouse_procedure (
 procedure_id VARCHAR(100),
 procedure_name VARCHAR(1000),
@@ -189,7 +192,7 @@ gene_symbol VARCHAR(100),
 impcParameterOrigId VARCHAR(100)
 );
 
-#Add data from parameter_procedure_relationship and mouse_parameter_relationship into mouse_procedure
+#Add data from parameter_procedure_relationship and mouse_parameter_relationship into mouse_procedure.
 INSERT INTO 
   mouse_procedure (procedure_id, procedure_name, parameter_id, parameter_description_name, gene_symbol,
   impcParameterOrigId)
@@ -202,19 +205,19 @@ FROM
 LEFT JOIN 
   mouse_parameter_relationship
 ON 
-  mouse_parameter_relationship.impcParameterOrigId =                                             parameter_procedure_relationship.impcParameterOrigId;
+  mouse_parameter_relationship.impcParameterOrigId =                                            parameter_procedure_relationship.impcParameterOrigId;
 
 ```
 
 #3 Grouping the parameters together based on their naming similarity
 ```{sql connection=}
-#Create groupings table
+#Create a groupings table.
 CREATE TABLE groupings (
 group_id SERIAL, 
 group_name VARCHAR(255) NOT NULL 
 );
 
-#Insert groupings values into the groupings table
+#Insert groupings values into the groupings table.
 INSERT INTO groupings (group_name) VALUES
 ('Weight'),
 ('Placenta'),
@@ -236,36 +239,36 @@ where parameter_name like '%brain%';
 ##Update the mice_info tables to add groupings
 ```{sql connection=}
 
-#Add group_name to the mice_info table
+#Add group_name to the mice_info table.
 alter table mice_info
 add group_name VARCHAR(255);
 
-#Update the mice_info table to include the grouping for Weight
+#Update the mice_info table to include the grouping for Weight.
 UPDATE mice_info
 SET group_name = (SELECT group_name FROM groupings WHERE group_name = 'Weight')
 WHERE parameter_name LIKE '%weight%';
 
-#Update the mice_info table to include the grouping for Placenta
+#Update the mice_info table to include the grouping for Placenta.
 UPDATE mice_info
 SET group_name = (SELECT group_name FROM groupings WHERE group_name = 'Placenta')
 WHERE parameter_name LIKE '%placenta%';
 
-#Update the mice_info table to include the grouping for Brain
+#Update the mice_info table to include the grouping for Brain.
 UPDATE mice_info
 SET group_name = (SELECT group_name FROM groupings WHERE group_name = 'Brain')
 WHERE parameter_name LIKE '%brain';
 
-#Update the mice_info table to include the grouping for Red Blood Cell
+#Update the mice_info table to include the grouping for Red Blood Cell.
 UPDATE mice_info
 SET group_name = (SELECT group_name FROM groupings WHERE group_name = 'Red Blood Cell')
 WHERE parameter_name LIKE '%red blood cell%';
 
-#Update the mice_info table to include the grouping for Cholesterol
+#Update the mice_info table to include the grouping for Cholesterol.
 UPDATE mice_info
 SET group_name = (SELECT group_name FROM groupings WHERE group_name = 'Cholesterol')
 WHERE parameter_name LIKE '%cholesterol%';
 
-#Update the mice_info table to include the grouping for Embryo
+#Update the mice_info table to include the grouping for Embryo.
 UPDATE mice_info
 SET group_name = (SELECT group_name FROM groupings WHERE group_name = 'Embryo')
 WHERE parameter_name LIKE '%embryo%';
