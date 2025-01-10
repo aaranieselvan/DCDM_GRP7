@@ -107,9 +107,9 @@ server <- function(input, output, session) {
     clustering_matrix <- as.matrix(selected_genes_data[, c("log_fdr")])  # Use log-transformed FDR values for clustering
     rownames(clustering_matrix) <- selected_genes_data$gene_symbol
     
-    clustering_matrix <- scale(clustering_matrix)  # Normalize log_fdr values
+    clustering_matrix <- scale(clustering_matrix)  # Normalise log_fdr values
     
-    colnames(clustering_matrix) <- "Normalized Log FDR"
+    colnames(clustering_matrix) <- "Normalised Log FDR"
     
     distance_matrix <- dist(clustering_matrix, method = "euclidean")
     hc <- hclust(distance_matrix, method = "complete")
