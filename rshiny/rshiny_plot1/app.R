@@ -9,13 +9,13 @@ library(dplyr)
 # Load the clean mouse data 
 data_rshiny <- read.csv("~/Desktop/DCDM_GRP7/outputs/clean_final_data.csv")
 
-# Use the pipe function to transform the p-value to -10log scale, and then filter by significance
-# We apply the -log10 scale for better visualisation of small p-values, emphasising statistically significant p-values
-data_rshiny <- data_rshiny %>% mutate(
-  log_p_value = -log10(pvalue), # Transform p-value to -log10 scale
-  Significant = pvalue <= 0.05  # Add significance threshold
-)
-data_rshiny
+# Apply the significance threshold, calculate FDR, and then transform to log scale
+data_rshiny <- data_rshiny %>%
+  mutate(
+    Significant = pvalue <= 0.05,  # Apply the significance threshold (0.05)
+    FDR = p.adjust(pvalue, method = "BH"),  # Apply Benjamini-Hochberg FDR adjustment
+    log_p_value = -log10(FDR)  # Transform FDR-adjusted p-value to -log10 scale
+  )
 
 # Define the User Interface (UI) of the Shiny App
 ui <- fluidPage(
@@ -52,7 +52,6 @@ server <- function(input, output) {
   output$pvalplot <- renderPlot({
     
     # Filter the data for the selected gene symbol
-    # This will keep only rows where, significance is true (i.e pval <0.05), and where the gene symbol matches the user's selection 
     filtered_mouse_data <- data_rshiny %>%
       filter(Significant == TRUE & gene_symbol == input$gene_symbol)
     
@@ -61,16 +60,15 @@ server <- function(input, output) {
   })
 }
 
-
 # Define a function to plot significant p-values
 plot_volcano <- function(filtered_mouse_data) { 
   ggplot(filtered_mouse_data, aes(x = parameter_name, y = log_p_value)) +
     
-    # Add vertical segments representing the -log10(p-value) from y=0 to the log_p_value
+    # Add vertical segments representing the -log10(FDR) from y=0 to the log_p_value
     geom_segment(aes(x = parameter_name, y = 0, yend = log_p_value), 
                  size = 1, color = "lightpink") +
     
-    # Add points on the plot representing the -log10(p-value) for each phenotype
+    # Add points on the plot representing the -log10(FDR) for each phenotype
     geom_point(size = 3, color = "deeppink") +
     
     # Add text labels for the log_p_value on top of each point and adjust positioning 
@@ -83,7 +81,7 @@ plot_volcano <- function(filtered_mouse_data) {
     labs(
       title = "Significant Phenotypic Changes by Knockout Gene",
       x = "Phenotype",
-      y = "-log10(p-value)"
+      y = "-log10(FDR)"
     ) +
     
     # Adjust plot theme for better fit
